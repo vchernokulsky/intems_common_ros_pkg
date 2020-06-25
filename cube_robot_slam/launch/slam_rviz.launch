@@ -1,0 +1,13 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="configuration_basename" default="turtlebot3_lds_2d.lua"/>
+ <arg name="open_rviz" default="true"/>
+  <!-- rviz -->
+<param name="robot_description" textfile="$(find cube_robot)/launch/model.urdf" />
+  <group if="$(arg open_rviz)">
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find cube_robot_slam)/rviz/cube_robot_gmapping.rviz">
+
+</node>
+  </group>
+</launch>

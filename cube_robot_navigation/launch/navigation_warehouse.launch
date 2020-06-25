@@ -1,0 +1,9 @@
+<launch>
+    <include file="$(find cube_robot_navigation)/launch/cube_robot_navigation.launch">
+        <arg name="map_file" value="$(find cube_robot_navigation)/maps/warehouse/map.yaml"/>
+        <arg name="pose_x" value="0.0"/>
+        <arg name="pose_y" value="0.0"/>
+        <arg name="pose_a" value="0.0"/>
+        <arg name="param_folder" value="$(find cube_robot_navigation)/param/cube_robot_plugins"/>
+    </include>
+</launch>

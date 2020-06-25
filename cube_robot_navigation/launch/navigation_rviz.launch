@@ -1,0 +1,18 @@
+<launch>
+  <!-- Arguments -->
+
+
+  <arg name="open_rviz" default="true"/>
+
+
+
+
+
+<param name="robot_description" textfile="$(find cube_robot)/launch/model.urdf" />
+
+  <!-- rviz -->
+  <group if="$(arg open_rviz)"> 
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find cube_robot_navigation)/rviz/cube_robot_navigation.rviz"/>
+  </group>
+</launch>

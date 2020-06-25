@@ -1,0 +1,6 @@
+<launch>
+
+  <!-- turtlebot3_teleop_key already has its own built in velocity smoother -->
+  <node pkg="cube_robot_teleop" type="cube_robot_teleop_server.py" name="cube_robot_teleop_server"  output="screen">
+  </node>
+</launch>

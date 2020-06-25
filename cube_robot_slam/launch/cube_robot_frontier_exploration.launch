@@ -1,0 +1,38 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="configuration_basename" default="turtlebot3_lds_2d.lua"/>
+  <arg name="sensor_range" default="1.0"/>
+  <arg name="cmd_vel_topic" default="/cmd_vel" />
+  <arg name="odom_topic" default="odom" />
+  <arg name="param_location" default="$(find cube_robot_navigation)/param/cube_robot"/>
+
+  <!-- TurtleBot3 and Gmapping -->
+  <include file="$(find cube_robot_slam)/launch/cube_robot_gmapping.launch">
+    <arg name="configuration_basename" value="$(arg configuration_basename)"/>
+  </include>
+
+  <!-- AMCL -->
+  <include file="$(find cube_robot_navigation)/launch/amcl.launch"/>
+
+  <!-- move_base -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+    <rosparam file="$(arg param_location)/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(arg param_location)/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(arg param_location)/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(arg param_location)/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(arg param_location)/move_base_params.yaml" command="load" />
+    <rosparam file="$(arg param_location)/dwa_local_planner_params.yaml" command="load" />
+    <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
+    <remap from="odom" to="$(arg odom_topic)"/>
+  </node>
+
+  <!-- frontier_exploration -->
+  <node pkg="frontier_exploration" type="explore_client" name="explore_client" output="screen"/>
+  <node pkg="frontier_exploration" type="explore_server" name="explore_server" output="screen" >
+    <param name="frequency" type="double" value="1.0"/>
+    <param name="goal_aliasing" type="double" value="$(arg sensor_range)"/>
+    <rosparam file="$(arg param_location)/costmap_common_params.yaml" command="load" ns="explore_costmap" />
+    <rosparam file="$(find cube_robot_slam)/config/frontier_exploration.yaml" command="load" ns="explore_costmap" />
+  </node>
+</launch>

@@ -1,0 +1,8 @@
+<launch>
+
+  <include file="$(find cube_robot_navigation)/launch/cube_robot_navigation.launch">
+    <arg name="map_file" value="$(find cube_robot_navigation)/maps/labirint/map.yaml"/>
+  </include>
+
+
+</launch>

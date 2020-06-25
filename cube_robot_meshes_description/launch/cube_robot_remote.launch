@@ -1,0 +1,6 @@
+<launch>
+  <arg name="multi_robot_name" default=""/>
+
+  <param name="robot_description" textfile="$(find cube_robot_meshes_description)/cube_robot.urdf" />
+
+</launch>
