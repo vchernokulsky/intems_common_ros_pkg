@@ -36,7 +36,7 @@
 __author__ = "mferguson@willowgarage.com (Michael Ferguson)"
 
 import rospy
-from rosserial_python import SerialClient, RosSerialServer
+from custom_rosserial_python import SerialClient, RosSerialServer
 from serial import SerialException
 from time import sleep
 import multiprocessing
