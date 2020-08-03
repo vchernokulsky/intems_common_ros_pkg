@@ -324,14 +324,8 @@ class SerialClient(object):
         self.write_lock = threading.RLock()
         self.write_queue = Queue()
         self.write_thread = None
-
-        self.lastsync = rospy.Time(0)
-        self.lastsync_lost = rospy.Time(0)
-        self.lastsync_success = rospy.Time(0)
-        self.last_read = rospy.Time(0)
-        self.last_write = rospy.Time(0)
         self.timeout = timeout
-        self.synced = False
+        self.start_time = time.time()
         self.fix_pyserial_for_test = fix_pyserial_for_test
 
         self.pub_diagnostics = rospy.Publisher('/diagnostics', diagnostic_msgs.msg.DiagnosticArray, queue_size=10)
@@ -361,12 +355,6 @@ class SerialClient(object):
 
         time.sleep(0.1)           # Wait for ready (patch for Uno)
 
-        # hydro introduces protocol ver2 which must match node_handle.h
-        # The protocol version is sent as the 2nd sync byte emitted by each end
-        self.protocol_ver1 = '\xff'
-        self.protocol_ver2 = '\xfe'
-        self.protocol_ver = self.protocol_ver2
-
         self.publishers = dict()  # id:Publishers
         self.subscribers = dict() # topic:Subscriber
         self.services = dict()    # topic:Service
@@ -390,7 +378,6 @@ class SerialClient(object):
 
         rospy.sleep(2.0)
         self.requestTopics()
-        self.lastsync = rospy.Time.now()
 
         signal.signal(signal.SIGINT, self.txStopRequest)
 
@@ -422,15 +409,13 @@ class SerialClient(object):
 
     def tryRead(self, length):
         try:
-            read_start = time.time()
             bytes_remaining = length
 
             result = bytearray()
-            while bytes_remaining != 0 and time.time() - read_start < self.timeout:
+            while bytes_remaining != 0:
                 with self.read_lock:
                     received = self.port.read(bytes_remaining)
                 if len(received) != 0:
-                    self.last_read = rospy.Time.now()
                     result.extend(received)
                     bytes_remaining -= len(received)
 
@@ -451,19 +436,17 @@ class SerialClient(object):
             self.write_thread.daemon = True
             self.write_thread.start()
 
+        self.start_time = time.time()
+
         # Handle reading.
         data = ''
         read_step = None
         while not rospy.is_shutdown():
-            if (rospy.Time.now() - self.lastsync).to_sec() > (self.timeout * 3):
-                if self.synced:
-                    rospy.logerr("Lost sync with device, restarting...")
-                else:
-                    rospy.logerr("Unable to sync with device; possible link problem or link software version mismatch such as hydro rosserial_python with groovy Arduino")
-                self.lastsync_lost = rospy.Time.now()
-                self.sendDiagnostics(diagnostic_msgs.msg.DiagnosticStatus.ERROR, ERROR_NO_SYNC)
-                self.requestTopics()
-                self.lastsync = rospy.Time.now()
+            if time.time() - self.start_time > self.timeout:
+                with self.write_lock:
+                    self.handleTimeRequest('')
+                self.start_time = time.time()
+                rospy.loginfo("Synchronized time with DiffDrive")
 
             with self.read_lock:
                 if self.port.inWaiting() < 1:
@@ -489,8 +472,6 @@ class SerialClient(object):
                 rospy.loginfo("Packet Failed :  Failed to read msg data")
                 rospy.loginfo("expected msg length is %d", msg_length)
                 raise
-            self.synced = True
-            self.lastsync_success = rospy.Time.now()
             try:
                 self.callbacks[topic_id](msg)
             except KeyError:
@@ -615,7 +596,6 @@ class SerialClient(object):
         data_buffer = StringIO.StringIO()
         t.serialize(data_buffer)
         self.send( TopicInfo.ID_TIME, data_buffer.getvalue() )
-        self.lastsync = rospy.Time.now()
 
     def handleParameterRequest(self, data):
         """ Send parameters to device. Supports only simple datatypes and arrays of such. """
@@ -680,7 +660,6 @@ class SerialClient(object):
         """
         with self.write_lock:
             self.port.write(data)
-            self.last_write = rospy.Time.now()
 
     def _send(self, topic, msg):
         """
@@ -730,14 +709,7 @@ class SerialClient(object):
         status.level = level
 
         status.values.append(diagnostic_msgs.msg.KeyValue())
-        status.values[0].key="last sync"
-        if self.lastsync.to_sec()>0:
-            status.values[0].value=time.ctime(self.lastsync.to_sec())
-        else:
-            status.values[0].value="never"
 
         status.values.append(diagnostic_msgs.msg.KeyValue())
-        status.values[1].key="last sync lost"
-        status.values[1].value=time.ctime(self.lastsync_lost.to_sec())
 
         self.pub_diagnostics.publish(msg)
