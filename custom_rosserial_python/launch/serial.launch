@@ -1,5 +1,5 @@
 <launch>
-	<node name="CustomSerialNode" pkg="custom_rosserial_python" type="custom_serial_node.py">
+	<node name="CustomSerialNode" pkg="custom_rosserial_python" type="custom_serial_node.py" output="screen">
 		<param name="port" type="string" value="tcp"/>
 	</node>
 </launch>
