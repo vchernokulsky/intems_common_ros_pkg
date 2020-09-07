@@ -391,8 +391,9 @@ class SerialClient(object):
                 self.port.flushInput()
 
         # request topic sync
-        self.write_queue.put(struct.pack('< h', 2))
-        self.write_queue.put("\x00\x00")
+        # self.write_queue.put(struct.pack('< h', 2))
+        # self.write_queue.put("\x00\x00")
+        self.write_queue.put((0, ""))
 
     def txStopRequest(self, signal, frame):
         """ send stop tx request to arduino when receive SIGINT(Ctrl-c)"""
@@ -400,9 +401,9 @@ class SerialClient(object):
             with self.read_lock:
                 self.port.flushInput()
 
-        self.write_queue.put(struct.pack('< h', 2))
-        self.write_queue.put(struct.pack('< h', 11))
-
+        # self.write_queue.put(struct.pack('< h', 2))
+        # self.write_queue.put(struct.pack('< h', 11))
+        self.write_queue.put((11, ""))
         # tx_stop_request is x0b
         rospy.loginfo("Send tx stop request")
         sys.exit(0)
@@ -666,7 +667,7 @@ class SerialClient(object):
         Send a message on a particular topic to the device.
         """
         length = len(msg)
-        if self.buffer_in > 0 and length > self.buffer_in:
+        if self.buffer_in > 0 and (length + 4) > self.buffer_in:
             rospy.logerr("Message from ROS network dropped: message larger than buffer.\n%s" % msg)
             return -1
         else:
