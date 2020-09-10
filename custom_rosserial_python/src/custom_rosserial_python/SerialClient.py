@@ -253,8 +253,9 @@ class RosSerialServer:
             client.run()
         except KeyboardInterrupt:
             pass
-        except RuntimeError:
+        except RuntimeError as e:
             rospy.loginfo("RuntimeError exception caught")
+            rospy.logerr(e)
             self.isConnected = False
         except socket.error:
             rospy.loginfo("socket.error exception caught")
@@ -325,6 +326,7 @@ class SerialClient(object):
         self.write_queue = Queue()
         self.write_thread = None
         self.timeout = timeout
+        self.lastsync = rospy.Time(0)
         self.start_time = time.time()
         self.fix_pyserial_for_test = fix_pyserial_for_test
 
@@ -378,7 +380,7 @@ class SerialClient(object):
 
         rospy.sleep(2.0)
         self.requestTopics()
-
+        self.lastsync = rospy.Time.now()
         signal.signal(signal.SIGINT, self.txStopRequest)
 
     def requestTopics(self):
@@ -443,10 +445,12 @@ class SerialClient(object):
         data = ''
         read_step = None
         while not rospy.is_shutdown():
-            if time.time() - self.start_time > self.timeout:
+            if (rospy.Time.now() - self.lastsync).to_sec() > self.timeout * 5.0:
                 with self.write_lock:
-                    self.handleTimeRequest('')
+                    self.requestTopics()
+                    # self.handleTimeRequest('')
                 self.start_time = time.time()
+                self.lastsync = rospy.Time.now()
                 rospy.loginfo("Synchronized time with DiffDrive")
 
             with self.read_lock:
@@ -597,6 +601,7 @@ class SerialClient(object):
         data_buffer = StringIO.StringIO()
         t.serialize(data_buffer)
         self.send( TopicInfo.ID_TIME, data_buffer.getvalue() )
+        self.lastsync = rospy.Time.now()
 
     def handleParameterRequest(self, data):
         """ Send parameters to device. Supports only simple datatypes and arrays of such. """
@@ -671,6 +676,8 @@ class SerialClient(object):
             rospy.logerr("Message from ROS network dropped: message larger than buffer.\n%s" % msg)
             return -1
         else:
+            rospy.loginfo("Lrn: " + str(length))
+            rospy.loginfo("topic: " + str(topic))
             data = chr(length&255) + chr(length>>8) + chr(topic&255) + chr(topic>>8)
             data = data + msg
             self._write(data)
