@@ -676,8 +676,6 @@ class SerialClient(object):
             rospy.logerr("Message from ROS network dropped: message larger than buffer.\n%s" % msg)
             return -1
         else:
-            rospy.loginfo("Lrn: " + str(length))
-            rospy.loginfo("topic: " + str(topic))
             data = chr(length&255) + chr(length>>8) + chr(topic&255) + chr(topic>>8)
             data = data + msg
             self._write(data)
