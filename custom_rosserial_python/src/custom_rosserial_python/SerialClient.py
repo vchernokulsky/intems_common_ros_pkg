@@ -127,7 +127,7 @@ class Subscriber:
 
     def callback(self, msg):
         """ Forward message to serial device. """
-        data_buffer = StringIO()
+        data_buffer = BytesIO()
         msg.serialize(data_buffer)
         self.parent.send(self.id, data_buffer.getvalue())
 
