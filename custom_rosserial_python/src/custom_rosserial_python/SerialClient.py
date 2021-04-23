@@ -35,17 +35,17 @@
 
 __author__ = "mferguson@willowgarage.com (Michael Ferguson)"
 
-import imp
+import importlib as imp
 import threading
 import sys
 import multiprocessing
-import StringIO
+from io import StringIO
 import errno
 import signal
 import socket
 import struct
 import time
-from Queue import Queue
+from multiprocessing import Queue
 
 from serial import Serial, SerialException, SerialTimeoutException
 
