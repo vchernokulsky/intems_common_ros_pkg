@@ -39,7 +39,7 @@ import importlib as imp
 import threading
 import sys
 import multiprocessing
-from io import StringIO
+from io import StringIO, BytesIO
 import errno
 import signal
 import socket
@@ -65,10 +65,11 @@ def load_pkg_module(package, directory):
     #check if its in the python path
     path = sys.path
     try:
-        imp.find_module(package)
-    except ImportError:
-        roslib.load_manifest(package)
-    try:
+        spam_spec = imp.util.find_spec(package)
+        if spam_spec is None:
+            rospy.logerr("Cannot import package : %s" % package)
+            rospy.logerr("sys.path was " + str(path))
+            return None
         m = __import__( package + '.' + directory )
     except ImportError:
         rospy.logerr( "Cannot import package : %s"% package )
@@ -126,7 +127,7 @@ class Subscriber:
 
     def callback(self, msg):
         """ Forward message to serial device. """
-        data_buffer = StringIO.StringIO()
+        data_buffer = StringIO()
         msg.serialize(data_buffer)
         self.parent.send(self.id, data_buffer.getvalue())
 
@@ -161,7 +162,7 @@ class ServiceServer:
 
     def callback(self, req):
         """ Forward request to serial device. """
-        data_buffer = StringIO.StringIO()
+        data_buffer = StringIO()
         req.serialize(data_buffer)
         self.response = None
         if self.parent.send(self.id, data_buffer.getvalue()) >= 0:
@@ -203,7 +204,7 @@ class ServiceClient:
         # call service proxy
         resp = self.proxy(req)
         # serialize and publish
-        data_buffer = StringIO.StringIO()
+        data_buffer = StringIO()
         resp.serialize(data_buffer)
         self.parent.send(self.id, data_buffer.getvalue())
 
@@ -257,9 +258,10 @@ class RosSerialServer:
             rospy.loginfo("RuntimeError exception caught")
             rospy.logerr(e)
             self.isConnected = False
-        except socket.error:
-            rospy.loginfo("socket.error exception caught")
-            self.isConnected = False
+        # except socket.error as e:
+        #     rospy.loginfo("socket.error exception caught")
+        #     rospy.loginfo(e)
+        #     self.isConnected = False
         finally:
             self.socket.close()
             for sub in client.subscribers.values():
@@ -289,14 +291,14 @@ class RosSerialServer:
             totalsent = totalsent + sent
 
     def read(self, rqsted_length):
-        self.msg = ''
+        self.msg = bytes()
         if not self.isConnected:
             return self.msg
 
         while len(self.msg) < rqsted_length:
             chunk = self.socket.recv(rqsted_length - len(self.msg))
 
-            if chunk == '':
+            if len(chunk) < 1:
                 raise RuntimeError("RosSerialServer.read() socket connection broken")
             self.msg = self.msg + chunk
         return self.msg
@@ -414,18 +416,18 @@ class SerialClient(object):
         try:
             bytes_remaining = length
 
-            result = bytearray()
+            result = bytes()
             while bytes_remaining != 0:
                 with self.read_lock:
                     received = self.port.read(bytes_remaining)
-                if len(received) != 0:
-                    result.extend(received)
-                    bytes_remaining -= len(received)
+                    if len(received) != 0:
+                        result += received
+                        bytes_remaining -= len(received)
 
             if bytes_remaining != 0:
                 raise IOError("Returned short (expected %d bytes, received %d instead)." % (length, length - bytes_remaining))
 
-            return bytes(result)
+            return result
         except Exception as e:
             raise IOError("Serial Port read failure: %s" % e)
 
@@ -598,7 +600,7 @@ class SerialClient(object):
         """ Respond to device with system time. """
         t = Time()
         t.data = rospy.Time.now()
-        data_buffer = StringIO.StringIO()
+        data_buffer = BytesIO()
         t.serialize(data_buffer)
         self.send( TopicInfo.ID_TIME, data_buffer.getvalue() )
         self.lastsync = rospy.Time.now()
@@ -635,7 +637,7 @@ class SerialClient(object):
             resp.floats =param
         if t == str:
             resp.strings = param
-        data_buffer = StringIO.StringIO()
+        data_buffer = StringIO()
         resp.serialize(data_buffer)
         self.send(TopicInfo.ID_PARAMETER_REQUEST, data_buffer.getvalue())
 
@@ -676,8 +678,13 @@ class SerialClient(object):
             rospy.logerr("Message from ROS network dropped: message larger than buffer.\n%s" % msg)
             return -1
         else:
-            data = chr(length&255) + chr(length>>8) + chr(topic&255) + chr(topic>>8)
-            data = data + msg
+            if isinstance(msg, str):
+                data = chr(length&255) + chr(length>>8) + chr(topic&255) + chr(topic>>8)
+                data = data + msg
+                data = data.encode()
+            else:
+                data = bytes([length & 255, length >> 8, topic & 255, topic >> 8])
+                data = data + msg
             self._write(data)
             return length
 
@@ -695,8 +702,8 @@ class SerialClient(object):
                         if isinstance(data, tuple):
                             topic, msg = data
                             self._send(topic, msg)
-                        elif isinstance(data, basestring):
-                            self._write(data)
+                        elif isinstance(data, str):
+                            self._write(data.encode())
                         else:
                             rospy.logerr("Trying to write invalid data type: %s" % type(data))
                         break
