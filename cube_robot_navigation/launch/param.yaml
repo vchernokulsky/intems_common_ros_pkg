@@ -17,7 +17,7 @@ global_costmap:
   footprint: [ [ -0.325, -0.325 ], [ -0.325, 0.325 ], [ 0.325, 0.325 ], [ 0.325, -0.325 ] ]
   update_frequency: 5
   publish_frequency: 5
-  transform_tolerance: 0.25
+  transform_tolerance: 1.5
   rolling_window: true
   width: 10
   height: 10
@@ -36,7 +36,7 @@ local_costmap:
       topic: scan
       sensor_frame: laser
       observation_persistence: 0.0
-      expected_update_rate: 0.2
+      expected_update_rate: 0.0
       data_type: LaserScan
       clearing: true
       marking: true
@@ -50,12 +50,12 @@ local_costmap:
     combination_method: 1
 
   inflation_layer:
-    inflation_radius: 0.55
-    cost_scaling_factor: 10.0
+    inflation_radius: 0.2
+    cost_scaling_factor: 5.0
   footprint: [ [ -0.325, -0.325 ], [ -0.325, 0.325 ], [ 0.325, 0.325 ], [ 0.325, -0.325 ] ]
-  update_frequency: 10
-  publish_frequency: 10
-  transform_tolerance: 0.5
+  update_frequency: 5
+  publish_frequency: 5
+  transform_tolerance: 1.5
   rolling_window: true
   width: 10
   height: 10
@@ -89,23 +89,23 @@ DWAPlannerROS:
   max_vel_y: 0
   min_vel_y: 0
 
-  max_trans_vel: 0.26
-  min_trans_vel: 0.05
-  max_rot_vel: 0.26
-  min_rot_vel: 0.1
+  max_vel_trans: 0.26
+  min_vel_trans: 0.05
+  max_vel_theta: 0.26
+  min_vel_theta: 0.1
 
   # Goal Tolerance Parameters
   yaw_goal_tolerance: 0.1
   xy_goal_tolerance: 0.2
-  latch_xy_goal_tolerance: false
+  latch_xy_goal_tolerance: false        # If goal tolerance is latched, if the robot ever reaches the goal xy location it will simply rotate in place, even if it ends up outside the goal tolerance while it is doing so.
 
  # Forward Simulation Parameters
-  sim_time: 1.7
-  sim_granularity: 0.025
-  vx_samples: 3
-  vy_samples: 10
-  vth_samples: 20
-  controller_frequency: 20.0 
+  sim_time: 4.0                         # The amount of time to forward-simulate trajectories in seconds
+  sim_granularity: 0.025                # The step size, in meters, to take between points on a given trajectory
+  vx_samples: 20                        # The number of samples to use when exploring the x velocity space
+  vy_samples: 0                         # The number of samples to use when exploring the y velocity space
+  vth_samples: 40                       # The number of samples to use when exploring the theta velocity space
+  controller_frequency: 5.0 
   
   # Trajectory Scoring Parameters
   path_distance_bias: 32.0
