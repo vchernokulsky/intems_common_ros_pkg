@@ -1,12 +1,12 @@
 <launch>
   <!-- Arguments -->
 
-  <arg name="map_file" default="$(find cube_robot_navigation)/maps/ohta2/map.yaml"/>
-  <arg name="open_rviz" default="true"/>
+  <arg name="map_file" default="/home/intemslab/map.yaml"/>
+  <arg name="open_rviz" default="false"/>
   <arg name="move_forward_only" default="false"/>
 
-  <arg name="pose_x" default="-39.1"/>
-  <arg name="pose_y" default="-287.6"/>
+  <arg name="pose_x" default="0.0"/>
+  <arg name="pose_y" default="0.0"/>
   <arg name="pose_a" default="0.0"/>
 
     <arg name="param_folder" default="$(find cube_robot_navigation)/param/cube_robot"/>
