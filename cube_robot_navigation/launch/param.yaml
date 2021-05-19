@@ -67,7 +67,7 @@ local_costmap:
     combination_method: 1
 
   inflation_layer:
-    inflation_radius: 0.5
+    inflation_radius: 2.0
     cost_scaling_factor: 0.9
   footprint: [ [ -0.325, -0.325 ], [ -0.325, 0.325 ], [ 0.325, 0.325 ], [ 0.325, -0.325 ] ]
   update_frequency: 5
@@ -139,3 +139,92 @@ DWAPlannerROS:
 
   # Global Plan Parameters
   prune_plan: false
+
+# TebLocalPlannerROS:
+
+#   odom_topic: odom
+#   map_frame: /map
+
+#   # Robot
+#   acc_lim_x: 0.1
+#   acc_lim_theta: 0.1
+#   max_vel_x: 0.26
+#   max_vel_x_backwards: 0.4
+#   max_vel_theta: 0.26
+#   max_vel_y: 0.0
+#   acc_lim_y: 0.0
+#   min_turning_radius: 0.0
+  
+#   footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
+#     type: "polygon"
+#     vertices: [ [ -0.325, -0.325 ], [ -0.325, 0.325 ], [ 0.325, 0.325 ], [ 0.325, -0.325 ] ]
+#     is_footprint_dynamic: false
+  
+#   # GoalTolerance  
+#   xy_goal_tolerance: 0.2
+#   yaw_goal_tolerance: 0.2
+#   free_goal_vel: False #Remove the goal velocity constraint such that the robot can arrive at the goal with maximum speed
+
+#   # Trajectory
+#   dt_ref: 0.3                             # Desired temporal resolution of the trajectory 
+#   dt_hysteresis: 0.1                      # Hysteresis for automatic resizing depending on the current temporal resolution, usually approx. 10% of dt_ref is recommended
+#   min_samples: 3                          # Minimum number of samples (should be always greater than 2)
+#   global_plan_overwrite_orientation: true # Overwrite orientation of local subgoals provided by the global planner (since they often provide only a 2D path)
+#   global_plan_viapoint_sep: -0.1          # If positive, via-points are extrected from the global plan (path-following mode). The value determines the resolution of the reference path (min. separation between each two consecutive via-points along the global plan, if negative: disabled). Refer to parameter weight_viapoint for adjusting the intensity. New in version 0.4
+#   max_global_plan_lookahead_dist: 3.0     # Specify the maximum length (cumulative Euclidean distances) of the subset of the global plan taken into account for optimization.
+#   force_reinit_new_goal_dist: 1.0         # Reinitialize the trajectory if a previous goal is updated with a separation of more than the specified value in meters
+#   feasibility_check_no_poses: 5           # Specify up to which pose on the predicted plan the feasibility should be checked each sampling interval.
+#   publish_feedback: false                 # Publish planner feedback containing the full trajectory and a list of active obstacles
+#   shrink_horizon_backup: true             # llows the planner to shrink the horizon temporary (50%) in case of automatically detected issues
+#   allow_init_with_backwards_motion: false
+#   exact_arc_length: False
+#   shrink_horizon_min_duration: 10.0
+
+#   teb_autosize: True
+  
+#   # Obstacles
+#   min_obstacle_dist: 0.4
+#   include_costmap_obstacles: true
+#   costmap_obstacles_behind_robot_dist: 1.0
+#   obstacle_poses_affected: 30
+#   inflation_dist: 0.6
+#   include_dynamic_obstacles: true
+#   legacy_obstacle_association: false
+#   obstacle_association_force_inclusion_factor: 1.5
+#   obstacle_association_cutoff_factor: 5
+
+#   costmap_converter_plugin: ""
+#   costmap_converter_spin_thread: true
+#   costmap_converter_rate: 5
+
+#   # Optimization
+#   no_inner_iterations: 5
+#   no_outer_iterations: 4
+#   optimization_activate: true
+#   optimization_verbose: false
+#   penalty_epsilon: 0.1
+#   weight_max_vel_x: 2
+#   weight_max_vel_theta: 1
+#   weight_acc_lim_x: 1
+#   weight_acc_lim_theta: 1
+#   weight_kinematics_nh: 1000
+#   weight_kinematics_forward_drive: 1
+#   weight_kinematics_turning_radius: 1
+#   weight_optimaltime: 1
+#   weight_obstacle: 50
+#   weight_dynamic_obstacle: 10 # not in use yet
+#   alternative_time_cost: false # not in use yet
+
+#   # Homotopy Class Planner
+
+#   enable_homotopy_class_planning: true
+#   enable_multithreading: true
+#   simple_exploration: false
+#   max_number_classes: 4
+#   roadmap_graph_no_samples: 15
+#   roadmap_graph_area_width: 5
+#   h_signature_prescaler: 0.5
+#   h_signature_threshold: 0.1
+#   obstacle_keypoint_offset: 0.1
+#   obstacle_heading_threshold: 0.45
+#   visualize_hc_graph: false
