@@ -1,4 +1,4 @@
-image: /home/developer/projects/FoodShuttle/catkin_ws/src/cube_robot_slam/map.pgm
+image: /home/developer/projects/FoodShuttle/catkin_ws/node/cube_robot_slam/map.pgm
 resolution: 0.050000
 origin: [-10.000000, -10.000000, 0.000000]
 negate: 0

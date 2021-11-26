@@ -1,4 +1,4 @@
-image: src/cube_robot_slam/config/map.pgm
+image: node/cube_robot_slam/config/map.pgm
 resolution: 0.050000
 origin: [-48.400000, -301.200000, 0.000000]
 negate: 0
